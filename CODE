@@ -1,0 +1,153 @@
+
+/*BoyerMoore Algorithm
+Group member: Siti Zulaikha Binti Abu Bakar
+              Ruth Tang Tung Rong
+              Nurain Syuhada Binti Adzhar
+*/
+
+class BoyerMoore {
+
+    static final int NO_OF_CHARS = 256; // Number of characters in the ASCII character set
+
+    // A utility function to get the maximum of two integers
+    static int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
+    // Preprocessing function for Boyer Moore's bad character heuristic
+    static void badCharHeuristic(char[] str, int size, int[] badchar) {
+        // Initialize all occurrences as -1
+        for (int i = 0; i < NO_OF_CHARS; i++) {
+            badchar[i] = -1;
+        }
+
+        // Fill the actual value of the last occurrence of a character in the pattern
+        for (int i = 0; i < size; i++) {
+            badchar[(int) str[i]] = i;
+        }
+    }
+
+    /*
+    Preprocessing function for the strong good suffix rule.
+    The good suffix rule in the Boyer-Moore algorithm consists of two parts:
+
+    Case 1 (Strong Good Suffix Rule): This case deals with situations where a suffix of the pattern
+                                      matches with a suffix in the text. If a mismatch occurs, the pattern is
+                                      shifted such that the next occurrence of this suffix in the pattern aligns
+                                      with the suffix in the text.
+
+    Case 2 (Weaker Suffix Rule): This case handles situations where the mismatch occurs within a suffix that matches
+                                 but there are no more occurrences of this suffix in the pattern. In this case, the pattern is
+                                 shifted to align the next widest border (a border is a substring that is both a prefix and a suffix) of the suffix with the text.
+                                 If no such border exists, the pattern is shifted to the end of the mismatched suffix.
+    */
+    static void preprocessStrongSuffix(int[] shiftArray, int[] suffixArray, String pattern) {
+        int length = pattern.length();
+        int i = length;
+        int j = length + 1;
+        suffixArray[i] = j;
+
+        // Process the pattern from the end to the beginning
+        while(i > 0) {
+            // Adjusting j if characters at positions (i-1) and (j-1) do not match
+            while(j <= length && pattern.charAt(i-1) != pattern.charAt(j-1)) {
+                // Set the shift value if it is not already set
+                if(shiftArray[j] == 0) {
+                    shiftArray[j] = j - i;
+                }
+                // Update j to the next value in the suffix array
+                j = suffixArray[j];
+            }
+            i--;
+            j--;
+            // Update the suffix array with the current j value
+            suffixArray[i] = j;
+        }
+    }
+
+    // Preprocessing for case 2 of the good suffix heuristic
+    static void preprocessCase2(int[] shiftArray, int[] suffixArray, String pattern) {
+        int length = pattern.length();
+        int j = suffixArray[0];
+
+        // Process the pattern from the beginning to the end
+        for(int i = 0; i < length; i++) {
+            // Set the shift value if it is not already set
+            if(shiftArray[i] == 0) {
+                shiftArray[i] = j;
+            }
+            // Update j to the next value in the suffix array if needed
+            if(i == j) {
+                j = suffixArray[j];
+            }
+        }
+    }
+
+    // Search for a pattern in the given text using Boyer-Moore algorithm with good suffix rule
+    static void searchPattern(String text, String pattern, int[] resultArray, int[] count) {
+        int patternLength = pattern.length();
+        int textLength = text.length();
+        int[] suffixArray = new int[patternLength + 1];
+        int[] shiftArray = new int[patternLength + 1];
+        int[] badchar = new int[NO_OF_CHARS];
+
+        // Initialize shiftArray with 0
+        for(int i = 0; i <= patternLength; i++) {
+            shiftArray[i] = 0;
+        }
+
+        // Preprocess the bad character heuristic
+        badCharHeuristic(pattern.toCharArray(), patternLength, badchar);
+        // Preprocess the strong good suffix heuristic
+        preprocessStrongSuffix(shiftArray, suffixArray, pattern);
+        // Preprocess case 2 of the good suffix heuristic
+        preprocessCase2(shiftArray, suffixArray, pattern);
+
+        // Print the text and pattern before searching
+        System.out.println("Text: " + text);
+        System.out.println("Pattern: " + pattern);
+
+        // Initialize the shift to start searching from the beginning of the text
+        int shift = 0;
+
+        // Search through the text
+        while(shift <= (textLength - patternLength)) {
+            int j = patternLength - 1;
+
+            // Move backward in the pattern while characters are matching
+            while(j >= 0 && pattern.charAt(j) == text.charAt(shift + j)) {
+                j--;
+            }
+
+            // If the pattern is found at the current shift
+            if(j < 0) {
+                count[0]++;
+                resultArray[count[0]] = shift;
+                // Use the shift value for the whole pattern
+                shift += shiftArray[0];
+            } else {
+                // Use the maximum shift value of the bad character and good suffix heuristics
+                shift += max(1, j - badchar[(int)text.charAt(shift + j)]);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        // Text to be searched
+        String text = "ILOVECPT212ILOVEUSM";
+        // Pattern to search for
+        String pattern = "LOVE";
+        // Array to store the result positions
+        int[] resultArray = new int[text.length()];
+        // Count of occurrences found
+        int[] count = {-1};
+
+        // Perform the search
+        searchPattern(text, pattern, resultArray, count);
+
+        // Print all the positions where the pattern is found
+        for (int i = 0; i <= count[0]; i++) {
+            System.out.println("Pattern found at position: " + resultArray[i]);
+        }
+    }
+}
