@@ -6,7 +6,6 @@ Group member: Siti Zulaikha Binti Abu Bakar
 */
 
 class BoyerMoore {
-
     static final int NO_OF_CHARS = 256; // Number of characters in the ASCII character set
 
     // A utility function to get the maximum of two integers
@@ -98,8 +97,10 @@ class BoyerMoore {
 
         // Preprocess the bad character heuristic
         badCharHeuristic(pattern.toCharArray(), patternLength, badchar);
+
         // Preprocess the strong good suffix heuristic
         preprocessStrongSuffix(shiftArray, suffixArray, pattern);
+
         // Preprocess case 2 of the good suffix heuristic
         preprocessCase2(shiftArray, suffixArray, pattern);
 
@@ -135,10 +136,13 @@ class BoyerMoore {
     public static void main(String[] args) {
         // Text to be searched
         String text = "ILOVECPT212ILOVEUSM";
+
         // Pattern to search for
         String pattern = "LOVE";
+
         // Array to store the result positions
         int[] resultArray = new int[text.length()];
+
         // Count of occurrences found
         int[] count = {-1};
 
